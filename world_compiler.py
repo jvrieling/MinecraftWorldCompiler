@@ -15,13 +15,13 @@ from distutils.dir_util import copy_tree
 import os.path
 
 #region Arguments
-levelInput = ""
+levelDatPath = ""
 x = None
 y = None
 z = None
 pitch = None
 yaw = None
-playerGameType = None
+gameType = None
 outputDir = None
 
 i = 0
@@ -31,8 +31,9 @@ while i < len(sys.argv):
         i += 1
         continue
 
+    #This is probably the worst possible way to do arguments but it works :)
     if i == 1:
-        levelInput = sys.argv[i]
+        levelDatPath = sys.argv[i]
     if i == 2:
         x = sys.argv[i]
     if i == 3:
@@ -44,26 +45,28 @@ while i < len(sys.argv):
     if i == 6:
         yaw = sys.argv[i]
     if i == 7:
-        playerGameType = sys.argv[i]
+        gameType = sys.argv[i]
     if i == 8:
         outputDir = sys.argv[i]
 
     i += 1
 
-while levelInput == "":
-    levelInput = input("Enter level.dat path: ")
 #endregion
 
 #region NBT Editing
 
-level = nbt.NBTFile(levelInput, 'rb')
+level = nbt.NBTFile(levelDatPath, 'rb')
 
-print("Editing " + str(level))
+print("Editing " + str(level) + "...")
 
 player = level["Data"]["Player"]
 tags = player["Tags"]
 
-tags.clear()
+i = 0
+while i < len(tags):
+    if tags[i].value == 'init':
+        del tags[i]
+    i += 1
 
 level["Data"]["GameType"].value = 2
 
@@ -87,12 +90,12 @@ if yaw != None:
 
 
 
-level.write_file(levelInput)
+level.write_file(levelDatPath)
 #endregion
 
 #region resolving symlinks
 
-world = os.path.abspath(os.path.join(levelInput, os.pardir))
+world = os.path.abspath(os.path.join(levelDatPath, os.pardir))
 copy_tree(world, os.path.join(outputDir, os.path.basename(world)))
 
 #endregion
